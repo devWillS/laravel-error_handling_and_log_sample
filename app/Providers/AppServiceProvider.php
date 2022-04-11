@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use Fluent\Logger\FLuentLogger;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Monolog\Handler\ElasticsearchHandler;
+use App\Foundation\ElasticsearchClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->singleton(
+            ElasticsearchHandler::class,
+            function (Application $app) {
+                return new ElasticsearchHandler(
+                    $app->make(ElasticsearchClient::class)->client()
+                );
+            }
+        );
     }
 }
