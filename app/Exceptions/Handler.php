@@ -2,7 +2,11 @@
 
 namespace App\Exceptions;
 
+use Exception;
+use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Response;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -13,7 +17,7 @@ class Handler extends ExceptionHandler
      * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
-        //
+        \Carbon\Exceptions\InvalidArgumentException::class,
     ];
 
     /**
@@ -37,5 +41,20 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof QueryException) {
+            return new Response('', Response::HTTP_INTERNAL_SERVER_ERROR, [
+                'X-App-Message' => 'An error occured.'
+            ]);
+        }
+
+        if ($exception instanceof Responsable) {
+            return $exception->toResponse($request);
+        }
+
+        return parent::render($request, $exception);
     }
 }
